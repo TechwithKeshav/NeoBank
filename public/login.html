@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeoBank — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#04060f;--surface:#0d1117;--surface2:#161b27;
+      --border:rgba(255,255,255,0.07);--text:#f0f4ff;--muted:#8892a4;
+      --primary:#2563eb;--accent:#00d4ff;--green:#00e676;--red:#ff6b6b;
+      --grad:linear-gradient(135deg,#2563eb,#00d4ff);
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+    @media(max-width:768px){body{grid-template-columns:1fr}}
+
+    /* LEFT PANEL */
+    .left-panel{background:linear-gradient(135deg,#0d1117,#0a0f1e);border-right:1px solid var(--border);padding:3rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+    @media(max-width:768px){.left-panel{display:none}}
+    .left-panel::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(37,99,235,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+    .left-logo{font-size:1.3rem;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative;z-index:1}
+    .left-content{position:relative;z-index:1}
+    .left-content h2{font-size:2.2rem;font-weight:900;letter-spacing:-1.5px;line-height:1.2;margin-bottom:1rem}
+    .left-content h2 span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .left-content p{color:var(--muted);font-size:0.88rem;line-height:1.8;margin-bottom:2rem}
+    .features-list{display:flex;flex-direction:column;gap:0.8rem}
+    .feature-item{display:flex;align-items:center;gap:12px;font-size:0.82rem;color:var(--muted)}
+    .feature-item::before{content:'✓';width:20px;height:20px;border-radius:50%;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0}
+    .left-footer{font-size:0.72rem;color:var(--muted);position:relative;z-index:1}
+    .left-footer span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:700}
+
+    /* MINI CARD */
+    .mini-card{background:linear-gradient(135deg,#1a1f35,#0d1117);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:2rem;position:relative;overflow:hidden}
+    .mini-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(37,99,235,0.1),transparent);pointer-events:none}
+    .mini-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem}
+    .mini-card-logo{font-size:0.7rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px}
+    .mini-card-chip{width:28px;height:20px;background:linear-gradient(135deg,#ffd700,#ff8c00);border-radius:4px}
+    .mini-card-num{font-size:0.75rem;color:rgba(255,255,255,0.4);letter-spacing:3px;font-family:monospace;margin-bottom:1rem}
+    .mini-card-bot{display:flex;justify-content:space-between;align-items:flex-end}
+    .mini-card-name{font-size:0.65rem;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px}
+    .mini-card-bal{font-size:1.2rem;font-weight:900;color:var(--text)}
+
+    /* RIGHT PANEL */
+    .right-panel{padding:3rem;display:flex;flex-direction:column;justify-content:center;align-items:center;background:var(--bg)}
+    .form-wrap{width:100%;max-width:400px}
+    .form-logo{font-size:1.2rem;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:2.5rem;display:block}
+    .form-title{font-size:1.8rem;font-weight:900;letter-spacing:-1px;margin-bottom:0.5rem}
+    .form-sub{color:var(--muted);font-size:0.85rem;margin-bottom:2rem}
+
+    /* TABS */
+    .tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:2rem}
+    .tab{padding:10px;text-align:center;border-radius:9px;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;color:var(--muted)}
+    .tab.active{background:var(--grad);color:#fff}
+
+    /* FORM */
+    .form-group{margin-bottom:1.2rem}
+    .form-label{font-size:0.72rem;font-weight:600;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;display:block;margin-bottom:6px}
+    .form-input{width:100%;padding:12px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:0.88rem;color:var(--text);outline:none;transition:all 0.2s}
+    .form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,0.15)}
+    .form-input::placeholder{color:var(--muted)}
+
+    .btn-submit{width:100%;padding:14px;background:var(--grad);color:#fff;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:0.92rem;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:0.5rem}
+    .btn-submit:hover{opacity:0.9;transform:translateY(-1px)}
+    .btn-submit:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ERROR / SUCCESS */
+    .alert{padding:12px 16px;border-radius:10px;font-size:0.82rem;font-weight:500;margin-bottom:1rem;display:none}
+    .alert-error{background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);color:var(--red)}
+    .alert-success{background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);color:var(--green)}
+
+    .divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0;color:var(--muted);font-size:0.75rem}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    .form-footer{text-align:center;font-size:0.78rem;color:var(--muted);margin-top:1.5rem}
+    .form-footer a{color:var(--accent);text-decoration:none;font-weight:600}
+    .form-footer a:hover{text-decoration:underline}
+
+    /* BACK LINK */
+    .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:0.78rem;text-decoration:none;margin-bottom:2rem;transition:color 0.2s}
+    .back-link:hover{color:var(--text)}
+  </style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="left-panel">
+  <div class="left-logo">NeoBank</div>
+
+  <div class="left-content">
+    <div class="mini-card">
+      <div class="mini-card-top">
+        <div class="mini-card-logo">NEOBANK</div>
+        <div class="mini-card-chip"></div>
+      </div>
+      <div class="mini-card-num">•••• •••• •••• 4291</div>
+      <div class="mini-card-bot">
+        <div class="mini-card-name">Your Name</div>
+        <div class="mini-card-bal">€5,000.00</div>
+      </div>
+    </div>
+
+    <h2>Your money,<br/><span>your control.</span></h2>
+    <p>Join NeoBank and experience banking the way it should be — instant, intelligent, and completely free.</p>
+
+    <div class="features-list">
+      <div class="feature-item">Instant money transfers to anyone</div>
+      <div class="feature-item">AI-powered financial advisor</div>
+      <div class="feature-item">Real-time spending analytics</div>
+      <div class="feature-item">Bank-grade security with JWT & bcrypt</div>
+      <div class="feature-item">€5,000 demo balance to get started</div>
+    </div>
+  </div>
+
+  <div class="left-footer">Built by <span>TechWithKeshav</span> · Berlin 2026</div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+  <div class="form-wrap">
+    <a href="/" class="back-link">← Back to home</a>
+    <span class="form-logo">NeoBank</span>
+    <h1 class="form-title" id="form-title">Welcome back</h1>
+    <p class="form-sub" id="form-sub">Sign in to your NeoBank account</p>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
+      <div class="tab" id="tab-signup" onclick="switchTab('signup')">Create Account</div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="alert alert-error" id="alert-error"></div>
+    <div class="alert alert-success" id="alert-success"></div>
+
+    <!-- NAME FIELD (signup only) -->
+    <div class="form-group" id="name-group" style="display:none">
+      <label class="form-label">Full Name</label>
+      <input type="text" class="form-input" id="name-input" placeholder="e.g. Keshav Mittal"/>
+    </div>
+
+    <!-- EMAIL -->
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input type="email" class="form-input" id="email-input" placeholder="your@email.com"/>
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="password-input" placeholder="Min. 6 characters"/>
+    </div>
+
+    <!-- SUBMIT -->
+    <button class="btn-submit" id="submit-btn" onclick="handleSubmit()">
+      Sign In →
+    </button>
+
+    <div class="form-footer">
+      <span id="footer-text">Don't have an account?</span>
+      <a href="#" id="footer-link" onclick="switchTab('signup')"> Create one free</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  let activeTab = 'login'
+
+  // Redirect if already logged in
+  const token = localStorage.getItem('neobank_token')
+  if (token) window.location.href = '/dashboard'
+
+  function switchTab(tab) {
+    activeTab = tab
+    const isLogin = tab === 'login'
+
+    // Update tabs
+    document.getElementById('tab-login').classList.toggle('active', isLogin)
+    document.getElementById('tab-signup').classList.toggle('active', !isLogin)
+
+    // Update form
+    document.getElementById('name-group').style.display = isLogin ? 'none' : 'block'
+    document.getElementById('form-title').textContent   = isLogin ? 'Welcome back' : 'Create account'
+    document.getElementById('form-sub').textContent     = isLogin ? 'Sign in to your NeoBank account' : 'Open your free NeoBank account'
+    document.getElementById('submit-btn').textContent   = isLogin ? 'Sign In →' : 'Create Account →'
+    document.getElementById('footer-text').textContent  = isLogin ? "Don't have an account?" : 'Already have an account?'
+    document.getElementById('footer-link').textContent  = isLogin ? ' Create one free' : ' Sign in'
+    document.getElementById('footer-link').onclick      = () => switchTab(isLogin ? 'signup' : 'login')
+
+    // Clear alerts
+    hideAlerts()
+  }
+
+  async function handleSubmit() {
+    const email    = document.getElementById('email-input').value.trim()
+    const password = document.getElementById('password-input').value.trim()
+    const name     = document.getElementById('name-input').value.trim()
+
+    // Validate
+    if (!email || !password) { showError('Please fill in all fields'); return }
+    if (activeTab === 'signup' && !name) { showError('Please enter your name'); return }
+    if (password.length < 6) { showError('Password must be at least 6 characters'); return }
+
+    const btn = document.getElementById('submit-btn')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span> Please wait...'
+
+    try {
+      const endpoint = activeTab === 'login' ? '/api/auth/login' : '/api/auth/signup'
+      const body     = activeTab === 'login'
+        ? { email, password }
+        : { name, email, password }
+
+      const res  = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      const data = await res.json()
+
+      if (!data.success) {
+        showError(data.message || 'Something went wrong')
+        return
+      }
+
+      // Save token and user to localStorage
+      localStorage.setItem('neobank_token', data.token)
+      localStorage.setItem('neobank_user',  JSON.stringify(data.user))
+
+      showSuccess(activeTab === 'login' ? 'Welcome back! Redirecting...' : 'Account created! Redirecting...')
+
+      // Redirect to dashboard
+      setTimeout(() => window.location.href = '/dashboard', 1000)
+
+    } catch(e) {
+      showError('Connection failed. Make sure the server is running.')
+    } finally {
+      btn.disabled = false
+      btn.innerHTML = activeTab === 'login' ? 'Sign In →' : 'Create Account →'
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('alert-error')
+    el.textContent = '⚠ ' + msg
+    el.style.display = 'block'
+    document.getElementById('alert-success').style.display = 'none'
+  }
+
+  function showSuccess(msg) {
+    const el = document.getElementById('alert-success')
+    el.textContent = '✓ ' + msg
+    el.style.display = 'block'
+    document.getElementById('alert-error').style.display = 'none'
+  }
+
+  function hideAlerts() {
+    document.getElementById('alert-error').style.display   = 'none'
+    document.getElementById('alert-success').style.display = 'none'
+  }
+
+  // Submit on Enter key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleSubmit()
+  })
+</script>
+</body>
+</html>

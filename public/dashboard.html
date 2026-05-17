@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeoBank — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#f0f4ff;--surface:#ffffff;--surface2:#f8faff;
+      --border:#e5e9f5;--text:#0f172a;--muted:#64748b;--light:#94a3b8;
+      --primary:#2563eb;--primary-light:#eff6ff;--primary-dark:#1d4ed8;
+      --green:#10b981;--green-light:#ecfdf5;
+      --red:#ef4444;--red-light:#fef2f2;
+      --amber:#f59e0b;--amber-light:#fffbeb;
+      --purple:#7c3aed;--purple-light:#f5f3ff;
+      --grad:linear-gradient(135deg,#2563eb,#00d4ff);
+      --grad2:linear-gradient(135deg,#7c3aed,#2563eb);
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* LAYOUT */
+    .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+    @media(max-width:900px){.app{grid-template-columns:1fr}}
+
+    /* SIDEBAR */
+    .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+    @media(max-width:900px){.sidebar{display:none}}
+    .sidebar-logo{font-size:1.2rem;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:2rem;padding:0.5rem 0}
+    .nav-section{margin-bottom:1.5rem}
+    .nav-label{font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--light);margin-bottom:0.5rem;padding:0 0.75rem}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:0.85rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all 0.2s;margin-bottom:2px;text-decoration:none}
+    .nav-item:hover{background:var(--primary-light);color:var(--primary)}
+    .nav-item.active{background:var(--primary-light);color:var(--primary);font-weight:600}
+    .nav-item .nav-icon{font-size:1rem;width:20px;text-align:center}
+    .sidebar-footer{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border)}
+    .user-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all 0.2s}
+    .user-card:hover{background:var(--surface2)}
+    .user-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#fff;flex-shrink:0}
+    .user-name{font-size:0.82rem;font-weight:600;color:var(--text)}
+    .user-email{font-size:0.7rem;color:var(--muted)}
+
+    /* MAIN */
+    .main{padding:2rem;overflow-y:auto}
+
+    /* TOP BAR */
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem}
+    .topbar-left h1{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px}
+    .topbar-left p{font-size:0.82rem;color:var(--muted);margin-top:2px}
+    .topbar-right{display:flex;align-items:center;gap:0.75rem}
+    .btn-logout{padding:8px 16px;background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.2);border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
+    .btn-logout:hover{background:var(--red);color:#fff}
+
+    /* BALANCE CARDS ROW */
+    .balance-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
+    .balance-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;position:relative;overflow:hidden;transition:all 0.2s}
+    .balance-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.06)}
+    .balance-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .bc-blue::before{background:var(--grad)}
+    .bc-green::before{background:linear-gradient(135deg,#10b981,#34d399)}
+    .bc-purple::before{background:var(--grad2)}
+    .bc-amber::before{background:linear-gradient(135deg,#f59e0b,#fbbf24)}
+    .balance-label{font-size:0.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem}
+    .balance-amount{font-size:1.8rem;font-weight:900;letter-spacing:-1px;color:var(--text);margin-bottom:0.25rem}
+    .balance-sub{font-size:0.72rem;color:var(--muted)}
+    .balance-icon{position:absolute;top:1rem;right:1rem;font-size:1.4rem;opacity:0.3}
+
+    /* BANK CARD */
+    .card-section{margin-bottom:2rem}
+    .section-title{font-size:0.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+    .section-title::before{content:'';width:16px;height:2px;background:var(--grad);border-radius:2px}
+    .bank-card{background:linear-gradient(135deg,#1e293b,#0f172a);border-radius:20px;padding:1.8rem;position:relative;overflow:hidden;max-width:380px;cursor:pointer;transition:transform 0.1s}
+    .bank-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(37,99,235,0.2),rgba(0,212,255,0.05));pointer-events:none;border-radius:20px}
+    .card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;position:relative;z-index:1}
+    .card-logo-text{font-size:0.78rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px}
+    .card-chip-el{width:32px;height:24px;background:linear-gradient(135deg,#ffd700,#ff8c00);border-radius:4px}
+    .card-number-el{font-size:0.85rem;color:rgba(255,255,255,0.5);letter-spacing:3px;font-family:monospace;margin-bottom:1.5rem;position:relative;z-index:1}
+    .card-bottom{display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:1}
+    .card-holder-name{font-size:0.75rem;font-weight:600;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px}
+    .card-balance-display{text-align:right}
+    .card-balance-label-el{font-size:0.6rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px}
+    .card-balance-amount-el{font-size:1.5rem;font-weight:900;color:#fff}
+    .card-glow-el{position:absolute;width:200px;height:200px;background:radial-gradient(circle,rgba(37,99,235,0.25),transparent);border-radius:50%;top:-60px;right:-60px;pointer-events:none}
+
+    /* QUICK ACTIONS */
+    .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:2rem}
+    .quick-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.2rem 0.5rem;text-align:center;cursor:pointer;transition:all 0.2s}
+    .quick-btn:hover{border-color:rgba(37,99,235,0.3);background:var(--primary-light);transform:translateY(-2px)}
+    .quick-btn .q-icon{font-size:1.4rem;margin-bottom:6px}
+    .quick-btn .q-label{font-size:0.72rem;font-weight:600;color:var(--muted)}
+
+    /* SEND MONEY MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--surface);border-radius:20px;padding:2rem;width:100%;max-width:420px;border:1px solid var(--border)}
+    .modal-title{font-size:1.1rem;font-weight:800;margin-bottom:0.5rem}
+    .modal-sub{font-size:0.8rem;color:var(--muted);margin-bottom:1.5rem}
+    .modal-close{float:right;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);margin-top:-4px}
+    .input-group{margin-bottom:1rem}
+    .input-label{font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px}
+    .modal-input{width:100%;padding:11px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:0.88rem;color:var(--text);outline:none;transition:all 0.2s}
+    .modal-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+    .modal-input::placeholder{color:var(--light)}
+    .modal-select{width:100%;padding:11px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:0.88rem;color:var(--text);outline:none;cursor:pointer}
+    .btn-send{width:100%;padding:13px;background:var(--grad);color:#fff;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:0.5rem;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
+    .btn-send:hover{opacity:0.9}
+    .btn-send:disabled{opacity:0.5;cursor:not-allowed}
+    .send-alert{padding:10px 14px;border-radius:8px;font-size:0.78rem;margin-bottom:1rem;display:none}
+    .send-error{background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.2)}
+    .send-success{background:var(--green-light);color:var(--green);border:1px solid rgba(16,185,129,0.2)}
+
+    /* TWO COL */
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+    @media(max-width:1100px){.two-col{grid-template-columns:1fr}}
+
+    /* TRANSACTIONS */
+    .card-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem}
+    .tx-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+    .tx-item:last-child{border-bottom:none}
+    .tx-avatar{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+    .tx-info{flex:1;min-width:0}
+    .tx-name{font-size:0.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .tx-date{font-size:0.7rem;color:var(--muted);margin-top:2px}
+    .tx-amount-el{font-size:0.9rem;font-weight:700;flex-shrink:0}
+    .tx-sent{color:var(--red)}
+    .tx-recv{color:var(--green)}
+    .tx-badge{font-size:0.62rem;font-weight:600;padding:2px 8px;border-radius:100px;margin-left:6px}
+    .empty-state{text-align:center;color:var(--muted);font-size:0.82rem;padding:2rem 0}
+
+    /* AI CHAT */
+    .ai-chat{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:2rem}
+    .ai-header{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
+    .ai-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+    .ai-title{font-size:0.88rem;font-weight:700;color:var(--text)}
+    .ai-sub{font-size:0.72rem;color:var(--muted)}
+    .chat-messages{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1rem;padding-right:4px}
+    .chat-messages::-webkit-scrollbar{width:4px}
+    .chat-messages::-webkit-scrollbar-track{background:transparent}
+    .chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+    .msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:0.8rem;line-height:1.6}
+    .msg-user{background:var(--primary);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+    .msg-ai{background:var(--surface2);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px;border:1px solid var(--border)}
+    .msg-typing{background:var(--surface2);color:var(--muted);align-self:flex-start;border:1px solid var(--border);border-bottom-left-radius:4px}
+    .chat-input-row{display:flex;gap:0.75rem}
+    .chat-input{flex:1;padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:0.82rem;color:var(--text);outline:none;transition:all 0.2s}
+    .chat-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+    .chat-input::placeholder{color:var(--light)}
+    .btn-chat-send{padding:10px 16px;background:var(--grad);color:#fff;border:none;border-radius:10px;font-size:0.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s}
+    .btn-chat-send:hover{opacity:0.9}
+    .btn-chat-send:disabled{opacity:0.5;cursor:not-allowed}
+    .suggested-btns{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem}
+    .suggested-btn{padding:5px 12px;background:var(--primary-light);color:var(--primary);border:1px solid rgba(37,99,235,0.2);border-radius:100px;font-size:0.7rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+    .suggested-btn:hover{background:var(--primary);color:#fff}
+
+    /* SPINNER */
+    .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+
+<!-- SEND MONEY MODAL -->
+<div class="modal-overlay" id="send-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">💸 Send Money</div>
+    <div class="modal-sub">Transfer money instantly to any NeoBank user</div>
+    <div class="send-alert send-error" id="send-error"></div>
+    <div class="send-alert send-success" id="send-success"></div>
+    <div class="input-group">
+      <label class="input-label">Receiver Email</label>
+      <input class="modal-input" type="email" id="recv-email" placeholder="receiver@email.com"/>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Amount (EUR)</label>
+      <input class="modal-input" type="number" id="send-amount" placeholder="0.00" min="0.01"/>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Description</label>
+      <input class="modal-input" type="text" id="send-desc" placeholder="e.g. Dinner split"/>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Category</label>
+      <select class="modal-select" id="send-category">
+        <option value="other">Other</option>
+        <option value="food">🍔 Food</option>
+        <option value="transport">🚇 Transport</option>
+        <option value="shopping">🛍️ Shopping</option>
+        <option value="entertainment">🎬 Entertainment</option>
+        <option value="bills">💡 Bills</option>
+      </select>
+    </div>
+    <button class="btn-send" id="send-btn" onclick="sendMoney()">Send Money →</button>
+  </div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">NeoBank</div>
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <a class="nav-item active" href="#"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a class="nav-item" href="#" onclick="document.getElementById('send-modal').classList.add('open')"><span class="nav-icon">💸</span> Send Money</a>
+      <a class="nav-item" href="#transactions"><span class="nav-icon">📋</span> Transactions</a>
+      <a class="nav-item" href="#analytics"><span class="nav-icon">📊</span> Analytics</a>
+      <a class="nav-item" href="#ai-advisor"><span class="nav-icon">🤖</span> AI Advisor</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card" id="sidebar-user">
+        <div class="user-avatar" id="sidebar-avatar" style="background:#2563eb">K</div>
+        <div>
+          <div class="user-name" id="sidebar-name">Loading...</div>
+          <div class="user-email" id="sidebar-email">...</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1 id="welcome-msg">Good morning! 👋</h1>
+        <p id="welcome-sub">Here's your financial overview</p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-logout" onclick="logout()">Sign Out</button>
+<button class="btn-logout" style="background:var(--red-light);color:var(--red);border-color:rgba(239,68,68,0.2)" onclick="deleteAccount()">Delete Account</button>
+      </div>
+    </div>
+
+    <!-- BALANCE CARDS -->
+    <div class="balance-grid">
+      <div class="balance-card bc-blue">
+        <div class="balance-icon">💰</div>
+        <div class="balance-label">Total Balance</div>
+        <div class="balance-amount" id="bal-total">€0.00</div>
+        <div class="balance-sub">Available funds</div>
+      </div>
+      <div class="balance-card bc-red">
+        <div class="balance-icon">📤</div>
+        <div class="balance-label">Total Sent</div>
+        <div class="balance-amount" id="bal-sent">€0.00</div>
+        <div class="balance-sub">All time</div>
+      </div>
+      <div class="balance-card bc-green">
+        <div class="balance-icon">📥</div>
+        <div class="balance-label">Total Received</div>
+        <div class="balance-amount" id="bal-recv">€0.00</div>
+        <div class="balance-sub">All time</div>
+      </div>
+      <div class="balance-card bc-purple">
+        <div class="balance-icon">📊</div>
+        <div class="balance-label">Transactions</div>
+        <div class="balance-amount" id="bal-count">0</div>
+        <div class="balance-sub">Total count</div>
+      </div>
+    </div>
+
+    <!-- BANK CARD + QUICK ACTIONS -->
+    <div class="card-section">
+      <div class="section-title">My Card</div>
+      <div class="bank-card" id="dash-card">
+        <div class="card-glow-el"></div>
+        <div class="card-top">
+          <div class="card-logo-text">NEOBANK</div>
+          <div class="card-chip-el"></div>
+        </div>
+        <div class="card-number-el" id="card-number">•••• •••• •••• ••••</div>
+        <div class="card-bottom">
+          <div class="card-holder-name" id="card-name">Loading...</div>
+          <div class="card-balance-display">
+            <div class="card-balance-label-el">Balance</div>
+            <div class="card-balance-amount-el" id="card-balance">€0.00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="quick-grid">
+      <div class="quick-btn" onclick="document.getElementById('send-modal').classList.add('open')">
+        <div class="q-icon">💸</div><div class="q-label">Send</div>
+      </div>
+      <div class="quick-btn" onclick="document.getElementById('ai-advisor').scrollIntoView({behavior:'smooth'})">
+        <div class="q-icon">🤖</div><div class="q-label">AI Advisor</div>
+      </div>
+      <div class="quick-btn" onclick="document.getElementById('analytics').scrollIntoView({behavior:'smooth'})">
+        <div class="q-icon">📊</div><div class="q-label">Analytics</div>
+      </div>
+      <div class="quick-btn" onclick="document.getElementById('transactions').scrollIntoView({behavior:'smooth'})">
+        <div class="q-icon">📋</div><div class="q-label">History</div>
+      </div>
+    </div>
+
+    <!-- AI ADVISOR -->
+    <div class="ai-chat" id="ai-advisor">
+      <div class="ai-header">
+        <div class="ai-dot"></div>
+        <div>
+          <div class="ai-title">🤖 AI Financial Advisor</div>
+          <div class="ai-sub">Powered by Groq AI — asks about your finances</div>
+        </div>
+      </div>
+      <div class="suggested-btns">
+        <div class="suggested-btn" onclick="askAI('How am I spending my money?')">How am I spending?</div>
+        <div class="suggested-btn" onclick="askAI('Give me savings tips based on my transactions')">Savings tips</div>
+        <div class="suggested-btn" onclick="askAI('Am I spending too much?')">Am I overspending?</div>
+        <div class="suggested-btn" onclick="askAI('What is my biggest expense category?')">Biggest expense?</div>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="msg msg-ai">👋 Hi! I'm your AI financial advisor. I can analyze your spending and give personalized advice. Ask me anything about your finances!</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chat-input" placeholder="Ask about your finances..." onkeydown="if(event.key==='Enter')sendChat()"/>
+        <button class="btn-chat-send" id="chat-btn" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+
+    <!-- ANALYTICS + TRANSACTIONS -->
+    <div class="two-col">
+
+      <!-- ANALYTICS CHART -->
+      <div class="card-box" id="analytics">
+        <div class="section-title">Spending by Category</div>
+        <canvas id="spending-chart" height="220"></canvas>
+        <div id="no-analytics" class="empty-state" style="display:none">No spending data yet. Send some money to see analytics!</div>
+      </div>
+
+      <!-- TRANSACTIONS -->
+      <div class="card-box" id="transactions">
+        <div class="section-title">Recent Transactions</div>
+        <div id="tx-list">
+          <div class="empty-state">No transactions yet. Send money to get started!</div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // ── AUTH CHECK ────────────────────────────
+  const token = localStorage.getItem('neobank_token')
+  const user  = JSON.parse(localStorage.getItem('neobank_user') || 'null')
+  if (!token || !user) window.location.href = '/login'
+
+  let transactions = []
+  let statsData    = null
+  let spendingChart = null
+
+  // ── INIT ──────────────────────────────────
+  async function init() {
+    loadUserUI()
+    await Promise.all([loadTransactions(), loadStats()])
+  }
+
+  // ── LOAD USER UI ─────────────────────────
+  function loadUserUI() {
+    // Get fresh user data
+    const u = JSON.parse(localStorage.getItem('neobank_user') || 'null')
+    if (!u) return
+
+    const initial = u.name?.charAt(0).toUpperCase() || 'U'
+    const hour    = new Date().getHours()
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
+
+    document.getElementById('welcome-msg').textContent   = `${greeting}, ${u.name?.split(' ')[0]}! 👋`
+    document.getElementById('welcome-sub').textContent   = `Account #${u.accountNumber}`
+    document.getElementById('sidebar-name').textContent  = u.name
+    document.getElementById('sidebar-email').textContent = u.email
+    document.getElementById('sidebar-avatar').textContent = initial
+    document.getElementById('sidebar-avatar').style.background = u.avatarColor || '#2563eb'
+    document.getElementById('card-name').textContent     = u.name?.toUpperCase()
+    document.getElementById('card-number').textContent   = `•••• •••• •••• ${u.accountNumber?.slice(-4) || '••••'}`
+    document.getElementById('card-balance').textContent  = `€${parseFloat(u.balance).toLocaleString('en-EU', {minimumFractionDigits:2, maximumFractionDigits:2})}`
+    document.getElementById('bal-total').textContent     = `€${parseFloat(u.balance).toLocaleString('en-EU', {minimumFractionDigits:2, maximumFractionDigits:2})}`
+  }
+
+  // ── LOAD TRANSACTIONS ────────────────────
+  async function loadTransactions() {
+    try {
+      const res  = await fetch('/api/transactions', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!data.success) return
+      transactions = data.transactions
+      renderTransactions()
+      updateBalanceCards()
+    } catch(e) { console.error(e) }
+  }
+
+  // ── LOAD STATS ───────────────────────────
+  async function loadStats() {
+    try {
+      const res  = await fetch('/api/transactions/stats', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (!data.success) return
+      statsData = data.stats
+      renderChart()
+    } catch(e) { console.error(e) }
+  }
+
+  // ── RENDER TRANSACTIONS ──────────────────
+  function renderTransactions() {
+    const list = document.getElementById('tx-list')
+    if (!transactions.length) {
+      list.innerHTML = '<div class="empty-state">No transactions yet. Send money to get started!</div>'
+      return
+    }
+    const userId = user.id
+    list.innerHTML = transactions.slice(0,10).map(tx => {
+      const isSent  = tx.sender?._id === userId || tx.sender?.id === userId
+      const other   = isSent ? tx.receiver : tx.sender
+      const name    = other?.name || 'Unknown'
+      const initial = name.charAt(0).toUpperCase()
+      const date    = new Date(tx.createdAt).toLocaleDateString('en-GB', {day:'numeric',month:'short'})
+      const colors  = { food:'#f59e0b', transport:'#3b82f6', shopping:'#8b5cf6', entertainment:'#ec4899', bills:'#ef4444', other:'#6b7280' }
+      const color   = colors[tx.category] || '#6b7280'
+      const catEmojis = { food:'🍔', transport:'🚇', shopping:'🛍️', entertainment:'🎬', bills:'💡', other:'💳' }
+      const emoji   = catEmojis[tx.category] || '💳'
+      return `
+        <div class="tx-item">
+          <div class="tx-avatar" style="background:${color}22;color:${color}">${emoji}</div>
+          <div class="tx-info">
+            <div class="tx-name">${isSent ? `To: ${name}` : `From: ${name}`} <span class="tx-badge" style="background:${color}22;color:${color}">${tx.category}</span></div>
+            <div class="tx-date">${tx.description} · ${date}</div>
+          </div>
+          <div class="tx-amount-el ${isSent ? 'tx-sent' : 'tx-recv'}">${isSent ? '-' : '+'}€${tx.amount.toFixed(2)}</div>
+        </div>`
+    }).join('')
+  }
+
+  // ── UPDATE BALANCE CARDS ─────────────────
+  function updateBalanceCards() {
+    const userId = user.id
+    let sent = 0, recv = 0
+    transactions.forEach(tx => {
+      if (tx.sender?._id === userId || tx.sender?.id === userId) sent += tx.amount
+      else recv += tx.amount
+    })
+    document.getElementById('bal-sent').textContent  = `€${sent.toFixed(2)}`
+    document.getElementById('bal-recv').textContent  = `€${recv.toFixed(2)}`
+    document.getElementById('bal-count').textContent = transactions.length
+  }
+
+  // ── RENDER CHART ─────────────────────────
+  function renderChart() {
+    if (!statsData?.categoryStats) return
+    const cats   = statsData.categoryStats
+    const labels = Object.keys(cats)
+    const values = Object.values(cats)
+    if (!labels.length) {
+      document.getElementById('no-analytics').style.display = 'block'
+      document.getElementById('spending-chart').style.display = 'none'
+      return
+    }
+    const colors = ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899']
+    const ctx    = document.getElementById('spending-chart').getContext('2d')
+    if (spendingChart) spendingChart.destroy()
+    spendingChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+        datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position:'bottom', labels:{ color:'#64748b', font:{ size:11 }, padding:16 } }
+        },
+        cutout: '65%'
+      }
+    })
+  }
+
+  // ── SEND MONEY ───────────────────────────
+  async function sendMoney() {
+    const email    = document.getElementById('recv-email').value.trim()
+    const amount   = document.getElementById('send-amount').value
+    const desc     = document.getElementById('send-desc').value.trim()
+    const category = document.getElementById('send-category').value
+
+    if (!email || !amount) { showSendAlert('error', 'Please fill all required fields'); return }
+    if (parseFloat(amount) <= 0) { showSendAlert('error', 'Amount must be greater than 0'); return }
+
+    const btn = document.getElementById('send-btn')
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span> Sending...'
+
+    try {
+      const res  = await fetch('/api/transactions/send', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
+        body: JSON.stringify({ receiverEmail:email, amount:parseFloat(amount), description:desc||'Transfer', category })
+      })
+      const data = await res.json()
+      if (!data.success) { showSendAlert('error', data.message); return }
+
+      // Update balance
+      const u = JSON.parse(localStorage.getItem('neobank_user'))
+      u.balance = data.newBalance
+      localStorage.setItem('neobank_user', JSON.stringify(u))
+
+      showSendAlert('success', data.message)
+      loadUserUI()
+      await loadTransactions()
+      await loadStats()
+
+      setTimeout(() => {
+        closeModal()
+        document.getElementById('recv-email').value  = ''
+        document.getElementById('send-amount').value = ''
+        document.getElementById('send-desc').value   = ''
+      }, 2000)
+
+    } catch(e) {
+      showSendAlert('error', 'Connection failed')
+    } finally {
+      btn.disabled = false
+      btn.innerHTML = 'Send Money →'
+    }
+  }
+
+  function showSendAlert(type, msg) {
+    const errEl = document.getElementById('send-error')
+    const sucEl = document.getElementById('send-success')
+    errEl.style.display = 'none'
+    sucEl.style.display = 'none'
+    if (type === 'error') { errEl.textContent = '⚠ ' + msg; errEl.style.display = 'block' }
+    else { sucEl.textContent = '✓ ' + msg; sucEl.style.display = 'block' }
+  }
+
+  function closeModal() {
+    document.getElementById('send-modal').classList.remove('open')
+    document.getElementById('send-error').style.display   = 'none'
+    document.getElementById('send-success').style.display = 'none'
+  }
+
+  // Close modal on overlay click
+  document.getElementById('send-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal()
+  })
+
+  // ── AI CHAT ───────────────────────────────
+  async function sendChat() {
+    const input = document.getElementById('chat-input')
+    const msg   = input.value.trim()
+    if (!msg) return
+
+    input.value = ''
+    addMsg(msg, 'user')
+
+    const btn = document.getElementById('chat-btn')
+    btn.disabled = true
+    addMsg('Analyzing your finances...', 'typing')
+
+    try {
+      const u     = JSON.parse(localStorage.getItem('neobank_user'))
+      const stats = statsData ? JSON.stringify(statsData) : 'No transaction data yet'
+
+      const res  = await fetch('/api/ai-advisor', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${token}` },
+        body: JSON.stringify({
+          message: msg,
+          context: `User: ${u.name}. Balance: €${u.balance}. Stats: ${stats}. Recent transactions: ${transactions.slice(0,5).map(t => `${t.description} €${t.amount}`).join(', ')}`
+        })
+      })
+      const data = await res.json()
+
+      // Remove typing indicator
+      const msgs = document.getElementById('chat-messages')
+      const typing = msgs.querySelector('.msg-typing')
+      if (typing) typing.remove()
+
+      addMsg(data.reply || 'Sorry, I could not process that.', 'ai')
+    } catch(e) {
+      const msgs = document.getElementById('chat-messages')
+      const typing = msgs.querySelector('.msg-typing')
+      if (typing) typing.remove()
+      addMsg('Connection error. Please try again.', 'ai')
+    } finally {
+      btn.disabled = false
+    }
+  }
+
+  function addMsg(text, type) {
+    const msgs = document.getElementById('chat-messages')
+    const div  = document.createElement('div')
+    div.className = `msg msg-${type}`
+    div.textContent = text
+    msgs.appendChild(div)
+    msgs.scrollTop = msgs.scrollHeight
+  }
+
+  function askAI(question) {
+    document.getElementById('chat-input').value = question
+    sendChat()
+  }
+
+  // ── LOGOUT ────────────────────────────────
+  function logout() {
+    localStorage.removeItem('neobank_token')
+    localStorage.removeItem('neobank_user')
+    window.location.href = '/'
+  }
+
+  // ── 3D CARD TILT ─────────────────────────
+  const dashCard = document.getElementById('dash-card')
+  dashCard.addEventListener('mousemove', (e) => {
+    const rect = dashCard.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const rotX = (y - rect.height/2) / 12
+    const rotY = (rect.width/2 - x) / 12
+    dashCard.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg)`
+  })
+  dashCard.addEventListener('mouseleave', () => {
+    dashCard.style.transform = 'perspective(800px) rotateX(0) rotateY(0)'
+    dashCard.style.transition = 'transform 0.5s ease'
+  })
+  dashCard.addEventListener('mouseenter', () => { dashCard.style.transition = 'none' })
+
+  init()
+</script>
+</body>
+</html>
